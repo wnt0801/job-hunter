@@ -1,0 +1,25 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+# 个人信息
+profile.md
+resume_database.md
+
+# 数据文件
+jobs.xlsx
+
+# 调试文件
+liepin_debug.html
+nowcoder_debug.html
+
+# Claude Code 辅助文件
+CLAUDE.md
+.claude/
+
+# 环境变量
+.env
+
+# Python 虚拟环境
+.venv/
