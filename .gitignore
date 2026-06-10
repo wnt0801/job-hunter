@@ -25,3 +25,5 @@ CLAUDE.md
 .venv/
 
 .idea/
+
+test_browser.py
