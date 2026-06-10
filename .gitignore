@@ -23,3 +23,5 @@ CLAUDE.md
 
 # Python 虚拟环境
 .venv/
+
+.idea/
