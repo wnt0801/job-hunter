@@ -2,11 +2,26 @@ import streamlit as st
 import pandas as pd
 from pathlib import Path
 
-EXCEL_FILE = "jobs.xlsx"
+JOBS_FILE = "jobs.xlsx"
+SAMPLE_FILE = "sample_jobs.xlsx"
+
+# === 改动 1：自动判断 demo 模式 ===
+# 本地有 jobs.xlsx 时正常使用真实数据；云端只放 sample_jobs.xlsx 时自动切换 demo 模式
+DEMO_MODE = not Path(JOBS_FILE).exists() and Path(SAMPLE_FILE).exists()
+EXCEL_FILE = SAMPLE_FILE if DEMO_MODE else JOBS_FILE
+
 STATUS_OPTIONS = ["未投递", "已投递", "已读", "约面", "已拒"]
 
 st.set_page_config(page_title="求职追踪看板", layout="wide")
 st.title("求职追踪看板")
+
+# === 改动 2：demo 模式说明横幅 ===
+if DEMO_MODE:
+    st.info(
+        "📊 当前展示的是脱敏抽样数据（88 条，原始数据 923 条），"
+        "用于演示看板功能。完整项目说明见 "
+        "[wannantian.com/projects/job-hunter](https://wannantian.com/projects/job-hunter)。"
+    )
 
 
 def load_data() -> pd.DataFrame:
@@ -95,8 +110,11 @@ TABLE_COLS = ["岗位名", "公司名", "城市", "匹配度", "推荐语", "投
 show_cols = [c for c in TABLE_COLS if c in filtered.columns]
 
 st.caption(f"共 {len(filtered)} 条（筛选后）")
+display_df = filtered[show_cols].reset_index(drop=True).copy()
+if "匹配度" in display_df.columns:
+    display_df["匹配度"] = display_df["匹配度"].astype(str)
 event = st.dataframe(
-    filtered[show_cols].reset_index(drop=True),
+    display_df,
     use_container_width=True,
     on_select="rerun",
     selection_mode="single-row",
@@ -146,7 +164,11 @@ with st.form(key=f"form_{orig_idx}"):
         index=STATUS_OPTIONS.index(current),
     )
     if st.form_submit_button("保存"):
-        save_status(orig_idx, new_status)
-        st.session_state.flash_msg = f"已将「{row.get('岗位名', '')}」更新为「{new_status}」"
+        # === 改动 3：demo 模式下不写文件 ===
+        if DEMO_MODE:
+            st.session_state.flash_msg = "演示模式下投递状态不会持久保存（云端文件系统为临时存储）"
+        else:
+            save_status(orig_idx, new_status)
+            st.session_state.flash_msg = f"已将「{row.get('岗位名', '')}」更新为「{new_status}」"
         st.session_state.needs_reload = True
         st.rerun()
